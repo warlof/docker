@@ -1,0 +1,22 @@
+# Use .Net Framework 4.8 - Server Core as base image
+FROM mcr.microsoft.com/dotnet/framework/runtime:4.8-20200211-windowsservercore-ltsc2019
+
+# Init metadata
+LABEL Description="Steamcmd" Vendor="Warlof Tutsimo" Version="1"
+
+# Download and install VC++ Redist 2015, 2017, 2019
+ADD 'https://aka.ms/vs/16/release/vc_redist.x64.exe' 'C:/TEMP/vc_redist.x64.exe'
+RUN C:\TEMP\vc_redist.x64.exe /quiet /install
+
+# Download and install Steam CMD
+ADD 'https://steamcdn-a.akamaihd.net/client/installer/steamcmd.zip' 'c:/steamcmd.zip'
+RUN powershell -Command Expand-Archive -Path 'c:/steamcmd.zip' -DestinationPath 'c:/steamcmd'
+
+# Init Steam repository
+# try/catch random exit 7 which could be false positive (https://git.lastassault.de/lastassault/golamp/go-steamcmd/commit/f5d4831fc18e132e85f0fe45d607e86b6ba19f9f?w=1)
+RUN "c:/steamcmd/steamcmd +quit || IF %ERRORLEVEL% EQU 0 ( EXIT 0 ) ELSE IF %ERRORLEVEL% EQU 7 ( EXIT 0 ) ELSE ( EXIT %ERRORLEVEL% )"
+
+WORKDIR "c:/steamcmd"
+
+# Be ready
+CMD ["c:/steamcmd/steamcmd", "+help", "+quit"]
